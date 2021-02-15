@@ -4,7 +4,7 @@ namespace DeliveryDrone
 {
     public class Drone
     {
-        private readonly Position initialPosition => new Position { Direction = Direction.North, PosX = 0, PosY = 0 };
+        private readonly Position initialPosition;
 
         public Position CurrentPosition { get; set; }
 
@@ -14,7 +14,7 @@ namespace DeliveryDrone
 
         public Drone()
         {
-            
+            initialPosition = new Position { Direction = Direction.North, PosX = 0, PosY = 0 };
         }
     }
 }
