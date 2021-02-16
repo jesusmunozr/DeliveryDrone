@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace DeliveryDrone
@@ -6,42 +7,38 @@ namespace DeliveryDrone
     public class Drone
     {
         private readonly Position initialPosition;
-        private readonly Delivery[] deliveries;
+        private readonly List<Delivery> deliveries;
+        public readonly string Id;
 
-        public event EventHandler<Position> OnDeliveryFinished;
-
-        public Position CurrentPosition { get; set; }
+        public Position CurrentPosition { get; private set; }
 
         public Position FinalPosition { get; set; }
 
         public short Capacity { get; set; } = 3;
 
-        public Drone(string[] paths)
+        public Drone(List<Delivery> deliveries, string droneId)
         {
+            Id = droneId;
             initialPosition = new Position { Direction = Direction.North, PosX = 0, PosY = 0 };
-
-            deliveries = new Delivery[3];
-            for(var i = 0; i<paths.Length; i++)
-            {
-                deliveries[i] = new Delivery(paths[0]);
-            }
+            this.deliveries = deliveries;
+            CurrentPosition = initialPosition;
         }
 
-        public Task Fly()
+        public Task<DeliveryOutput> StartDelivery()
         {
             return Task.Run(() =>
             {
+                var locations = new List<Position>();
                 foreach (var delivery in deliveries)
                 {
                     while (delivery.MoveNext())
-                    {
                         Move(delivery.Current);
-                    }
-
-                    // Notify the lunch has been delivered
-                    if (OnDeliveryFinished != null)
-                        OnDeliveryFinished(this, CurrentPosition);
+                    locations.Add(CurrentPosition);
                 }
+
+                var result = new DeliveryOutput(locations, Id);
+
+                return result;
             });
         }
 

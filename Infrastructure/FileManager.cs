@@ -8,9 +8,14 @@ namespace Infrastructure
 {
     public class FileManager : IFileManager
     {
-        public Task<string> CreateOutputFileAsync(string path)
+        public async Task<string> CreateOutputFileAsync(string name, string content)
         {
-            throw new NotImplementedException();
+            if (!Directory.Exists("Output"))
+                Directory.CreateDirectory("Output");
+
+            await File.WriteAllTextAsync($"Output/{name}", content);
+
+            return $"{Environment.CurrentDirectory}/{name}";
         }
 
         public string[] ListInputFiles(string inputFolder)

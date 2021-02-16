@@ -6,7 +6,7 @@ namespace Infrastructure
 {
     public interface IFileManager {
 
-        Task<string> CreateOutputFileAsync(string path);
+        Task<string> CreateOutputFileAsync(string name, string content);
 
         string[] ListInputFiles(string inputFolder);
 

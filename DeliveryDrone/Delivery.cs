@@ -11,10 +11,12 @@ namespace DeliveryDrone
     {
         private readonly char[] steps;
         private int position = -1;
+        public string DroneId { get; }
 
-        public Delivery(string path)
+        public Delivery(string path, string droneId)
         {
             steps = path.ToCharArray();
+            DroneId = droneId;
         }
 
         public char Current
