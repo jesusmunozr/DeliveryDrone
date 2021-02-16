@@ -13,9 +13,20 @@ namespace Infrastructure
             throw new NotImplementedException();
         }
 
+        public string[] ListInputFiles(string inputFolder)
+        {
+            if (!Directory.Exists(inputFolder))
+            {
+                throw new DirectoryNotFoundException("Input directory not found.");
+            }
+
+            return Directory.GetFiles(inputFolder);
+        }
+
         public async Task<string[]> ReadDeliveryFileAsync(string inputFilePath)
         {
-            if(!File.Exists(inputFilePath)){
+            if (!File.Exists(inputFilePath))
+            {
                 throw new FileNotFoundException("Input file not found.");
             }
 
