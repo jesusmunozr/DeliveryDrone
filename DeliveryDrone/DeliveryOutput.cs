@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Infrastructure;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,25 +8,47 @@ namespace DeliveryDrone
 {
     public class DeliveryOutput
     {
-        public List<Position> DeliveryLocations { get; }
+        public List<Location> DeliveryLocations { get; }
         public string DroneId { get; }
+        public bool Fail { get; }
+        public Exception FailureException { get; }
 
-        public DeliveryOutput(List<Position> locations, string droneId)
+        private readonly IFileManager fileManager;
+
+        public DeliveryOutput(List<Location> locations, string droneId, IFileManager fileManager)
         {
             DeliveryLocations = locations;
-            this.DroneId = droneId;
+            DroneId = droneId;
+            Fail = false;
+            this.fileManager = fileManager;
+            FailureException = null;
         }
-    }
 
-    public static class DeliveryOutputExtensions
-    {
-        public static string GetContent(this DeliveryOutput data)
+        public DeliveryOutput(string droneId, Exception exception, IFileManager fileManager)
+        {
+            DeliveryLocations = null;
+            DroneId = droneId;
+            Fail = true;
+            FailureException = exception;
+            this.fileManager = fileManager;
+        }
+
+        public async Task SaveAsync()
         {
             var builder = new StringBuilder();
             builder.AppendLine("== Reporte de entregas ==");
-            foreach(var position in data.DeliveryLocations)
-                builder.AppendLine($"({position.PosX}, {position.PosY}) dirección {position.Direction}");
-            return builder.ToString();
+
+            if (!Fail)
+            {
+                foreach (var location in DeliveryLocations)
+                    builder.AppendLine($"({location.PosX}, {location.PosY}) dirección {location.Orientation.GetName()}");
+            }
+            else
+            {
+                builder.AppendLine($"Error: {FailureException.Message}");
+            }
+
+            await fileManager.CreateOutputFileAsync($"out{DroneId}.txt", builder.ToString());
         }
     }
 }

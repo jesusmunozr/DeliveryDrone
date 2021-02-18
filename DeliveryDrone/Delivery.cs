@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DeliveryDrone
 {
-    public class Delivery : IEnumerator<char>
+    public class Delivery : IEnumerable<char>
     {
-        private readonly char[] steps;
-        private int position = -1;
+        private char[] steps;
         public string DroneId { get; }
 
         public Delivery(string path, string droneId)
@@ -18,6 +14,22 @@ namespace DeliveryDrone
             steps = path.ToCharArray();
             DroneId = droneId;
         }
+
+        public IEnumerator<char> GetEnumerator()
+        {
+            return new DeliveryEnum(steps);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+
+    public class DeliveryEnum : IEnumerator<char>
+    {
+        private char[] steps;
+        private int position = -1;
 
         public char Current
         {
@@ -34,17 +46,17 @@ namespace DeliveryDrone
             }
         }
 
-        object IEnumerator.Current
+        object IEnumerator.Current => Current;
+
+        public DeliveryEnum(char[] list)
         {
-            get
-            {
-                return Current;
-            }
+            steps = list;
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            Reset();
+            steps = null;
         }
 
         public bool MoveNext()

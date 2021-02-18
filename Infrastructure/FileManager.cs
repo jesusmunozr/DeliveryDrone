@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Infrastructure;
 
 namespace Infrastructure
 {
@@ -25,7 +25,8 @@ namespace Infrastructure
                 throw new DirectoryNotFoundException("Input directory not found.");
             }
 
-            return Directory.GetFiles(inputFolder);
+            // Files without correct name format will be ignored
+            return Directory.GetFiles(inputFolder).Where(s => Regex.IsMatch(Path.GetFileName(s), "in[0-9]+.txt")).ToArray();
         }
 
         public async Task<string[]> ReadDeliveryFileAsync(string inputFilePath)
