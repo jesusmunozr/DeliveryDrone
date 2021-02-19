@@ -4,6 +4,6 @@ namespace DeliveryDrone
 {
     public interface IRestaurant
     {
-        Task DispatchDronesAsync(string inputFolder);
+        Task DispatchLunchesAsync(string inputFolder, TransportTypes transport);
     }
 }

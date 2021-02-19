@@ -47,9 +47,14 @@ namespace DeliveryDrone
             }
         }
 
-        public bool IsValid()
+        public bool IsValid(short maximumDistance)
         {
-            return (PosX <= 10 && PosX >= -10 && PosY <= 10 && PosY >= -10);
+            return (PosX <= maximumDistance && PosX >= -maximumDistance && PosY <= maximumDistance && PosY >= -maximumDistance);
+        }
+
+        public object Clone()
+        {
+            return new Location(PosX, PosY, Orientation);
         }
 
         private CardinalPoints TurnLeft()
@@ -74,9 +79,6 @@ namespace DeliveryDrone
             return (CardinalPoints)currentValue;
         }
 
-        public object Clone()
-        {
-            return new Location(PosX, PosY, Orientation);
-        }
+
     }
 }

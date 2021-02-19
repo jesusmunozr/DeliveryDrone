@@ -1,4 +1,5 @@
 ﻿using Infrastructure;
+using Infrastructure.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,7 +12,7 @@ namespace DeliveryDrone
         public List<Location> DeliveryLocations { get; }
         public string DroneId { get; }
         public bool Fail { get; }
-        public Exception FailureException { get; }
+        public ExceptionBase FailureException { get; }
 
         private readonly IFileManager fileManager;
 
@@ -24,10 +25,10 @@ namespace DeliveryDrone
             FailureException = null;
         }
 
-        public DeliveryOutput(string droneId, Exception exception, IFileManager fileManager)
+        public DeliveryOutput(ExceptionBase exception, IFileManager fileManager)
         {
             DeliveryLocations = null;
-            DroneId = droneId;
+            DroneId = exception.DroneId;
             Fail = true;
             FailureException = exception;
             this.fileManager = fileManager;

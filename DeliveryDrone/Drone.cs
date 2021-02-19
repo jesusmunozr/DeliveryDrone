@@ -5,34 +5,35 @@ using System.Threading.Tasks;
 
 namespace DeliveryDrone
 {
-    public class Drone : IDrone
+    public class Drone : ITransport
     {
         private const short CAPACITY = 3;
-        private readonly IList<Delivery> deliveries;
-        public readonly string Id;
+        private const short MAXIMUM_DISTANCE = 10;
+        private Delivery delivery;
+        public string Id { get; private set; }
 
         public Location CurrentLocation { get; private set; }
 
-        public Drone(IList<Delivery> deliveries, string droneId)
+        public Drone()
         {
-            Id = droneId;
             CurrentLocation = new Location();
-            this.deliveries = deliveries;
         }
 
-        public Task<DeliveryOutput> StartDelivery(IFileManager fileManager)
+        public Task<DeliveryOutput> DeliverAsync(IFileManager fileManager, Delivery deliveryInfo)
         {
-            if (deliveries.Count > CAPACITY)
-                throw new DroneException("Drone capacity exceeded.", Id);
+            Id = deliveryInfo.DroneId;
+            delivery = deliveryInfo;
+
+            if (delivery.Routes.Count > CAPACITY)
+                throw new TransportException("Drone capacity exceeded.", Id);
 
             return Task.Run(() =>
             {
                 var locations = new List<Location>();
-                foreach (var delivery in deliveries)
+                foreach (var route in delivery.Routes)
                 {
-                    var deliveryEnumerator = delivery.GetEnumerator();
-                    while (deliveryEnumerator.MoveNext())
-                        Move(deliveryEnumerator.Current, Id);
+                    while (route.MoveNext())
+                        Move(route.Current);
                     locations.Add((Location)CurrentLocation.Clone());
                 }
 
@@ -42,12 +43,12 @@ namespace DeliveryDrone
             });
         }
 
-        private void Move(char step, string droneId)
+        private void Move(char step)
         {
             CurrentLocation.NextStep(step);
 
-            if (!CurrentLocation.IsValid())
-                throw new DroneException("Drone out of range.", droneId);
+            if (!CurrentLocation.IsValid(MAXIMUM_DISTANCE))
+                throw new TransportException("Drone out of range.", Id);
         }
     }
 }

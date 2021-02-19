@@ -1,12 +1,18 @@
-﻿using Infrastructure;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace tests.Infrastructure
+namespace Infrastructure.Tests
 {
-    public class FileManagerTests
+    public class FileManagerTests : IDisposable
     {
+        public void Dispose()
+        {
+            if (File.Exists("Output/out01.txt"))
+                File.Delete("Output/out01.txt");
+        }
+
         [Fact]
         public async Task GivenFilePathShouldReturnPathsArray()
         {
