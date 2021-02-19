@@ -2,7 +2,6 @@
 using Infrastructure.Exceptions;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace DeliveryDrone
@@ -11,15 +10,17 @@ namespace DeliveryDrone
     {
         private const short CAPACITY_OF_DRONES = 20;
         private readonly IFileManager fileManager;
+        private readonly ITransportFactory transportFactory;
 
         public IDictionary<string, DeliveryOutput> DeliveryStatus { get; set; } = new Dictionary<string, DeliveryOutput>();
 
-        public Restaurant(IFileManager fileManager)
+        public Restaurant(IFileManager fileManager, ITransportFactory factory)
         {
             this.fileManager = fileManager;
+            transportFactory = factory;
         }
 
-        public async Task DispatchDronesAsync(string inputFolder)
+        public async Task DispatchLunchesAsync(string inputFolder, TransportTypes transportType)
         {
             try
             {
@@ -30,62 +31,23 @@ namespace DeliveryDrone
 
                 var createDeliveryTasks = new List<Task>();
 
+                // Create input files
                 foreach (var input in inputFiles)
-                {
                     createDeliveryTasks.Add(CreateDeliveries(input));
-                    System.Diagnostics.Debug.WriteLine("Deliveries created.");
-                }
 
-                var dronesTasks = StartDeliveriesAsync(createDeliveryTasks);
-                //var dronesTasks = new List<Task>();
+                // Start deliveries and create the drones
+                var dronesTasks = StartDeliveriesAsync(createDeliveryTasks, transportType);
 
-                //while (createDeliveryTasks.Count > 0)
-                //{
-                //    Task finishedTask = await Task.WhenAny(createDeliveryTasks);
-
-                //    if(finishedTask.Exception is not null)
-                //    {
-                //        var concreteException = (DeliveryPathException)finishedTask.Exception.InnerException;
-                //        var output = new DeliveryOutput(concreteException.DroneId, concreteException, fileManager);
-                //        DeliveryStatus.Add(output.DroneId, output);
-
-                //        // Save file with the output information
-                //        await output.SaveAsync();
-
-                //        createDeliveryTasks.Remove(finishedTask);
-                //        continue;
-                //    }
-
-                //    var deliveries = ((Task<List<Delivery>>)finishedTask).Result;
-                //    var drone = new Drone(deliveries, deliveries[0].DroneId);
-                //    dronesTasks.Add(drone.StartDelivery(fileManager));
-
-                //    System.Diagnostics.Debug.WriteLine($"Drone {deliveries[0].DroneId} started...");
-                //    createDeliveryTasks.Remove(finishedTask);
-                //}
-
+                // Save the delivery result
                 await SaveResultsAsync(dronesTasks);
-                //while (dronesTasks.Count > 0)
-                //{
-                //    Task finishedTask = await Task.WhenAny(dronesTasks);
-
-                //    if (finishedTask.Exception is not null)
-                //        throw finishedTask.Exception;
-
-                //    var output = ((Task<DeliveryOutput>)finishedTask).Result;
-                //    await output.SaveAsync();
-
-                //    System.Diagnostics.Debug.WriteLine($"Drone {output.DroneId} finish.");
-                //    dronesTasks.Remove(finishedTask);
-                //}
             }
             catch
             {
                 throw;
             }
         }
-        
-        private async Task<List<Task>> StartDeliveriesAsync(List<Task> createDeliveryTasks)
+
+        private async Task<List<Task>> StartDeliveriesAsync(List<Task> createDeliveryTasks, TransportTypes transportType)
         {
             var dronesTasks = new List<Task>();
             while (createDeliveryTasks.Count > 0)
@@ -93,23 +55,14 @@ namespace DeliveryDrone
                 Task finishedTask = await Task.WhenAny(createDeliveryTasks);
 
                 if (finishedTask.Exception is not null)
+                    await ManageFailedTaskAsync(finishedTask);
+                else
                 {
-                    var concreteException = (DeliveryPathException)finishedTask.Exception.InnerException;
-                    var output = new DeliveryOutput(concreteException.DroneId, concreteException, fileManager);
-                    DeliveryStatus.Add(output.DroneId, output);
-
-                    // Save file with the output information
-                    await output.SaveAsync();
-
-                    createDeliveryTasks.Remove(finishedTask);
-                    continue;
+                    var delivery = ((Task<Delivery>)finishedTask).Result;
+                    var transport = transportFactory.CreateTransport(transportType);
+                    dronesTasks.Add(transport.DeliverAsync(fileManager, delivery));
                 }
 
-                var deliveries = ((Task<List<Delivery>>)finishedTask).Result;
-                var drone = new Drone(deliveries, deliveries[0].DroneId);
-                dronesTasks.Add(drone.StartDelivery(fileManager));
-
-                System.Diagnostics.Debug.WriteLine($"Drone {deliveries[0].DroneId} started...");
                 createDeliveryTasks.Remove(finishedTask);
             }
             return dronesTasks;
@@ -119,12 +72,7 @@ namespace DeliveryDrone
         {
             if (startDeliveryTask.Exception is not null)
             {
-                var concreteException = (DroneException)startDeliveryTask.Exception.InnerException;
-                var deliveryOutputFailed = new DeliveryOutput(concreteException.DroneId, concreteException, fileManager);
-                DeliveryStatus.Add(deliveryOutputFailed.DroneId, deliveryOutputFailed);
-
-                // Save file with the output information
-                await deliveryOutputFailed.SaveAsync();
+                await ManageFailedTaskAsync(startDeliveryTask);
                 return;
             }
 
@@ -135,25 +83,25 @@ namespace DeliveryDrone
                 Task finishedTask = await Task.WhenAny(dronesTasks);
 
                 if (finishedTask.Exception is not null)
+                    await ManageFailedTaskAsync(finishedTask);
+                else
                 {
-                    var concreteException = (DroneException)finishedTask.Exception.InnerException;
-                    var deliveryOutputFailed = new DeliveryOutput(concreteException.DroneId, concreteException, fileManager);
-                    DeliveryStatus.Add(deliveryOutputFailed.DroneId, deliveryOutputFailed);
-
-                    // Save file with the output information
-                    await deliveryOutputFailed.SaveAsync();
-
-                    dronesTasks.Remove(finishedTask);
-                    continue;
+                    var output = ((Task<DeliveryOutput>)finishedTask).Result;
+                    await output.SaveAsync();
+                    DeliveryStatus.Add(output.DroneId, output);
                 }
-
-                var output = ((Task<DeliveryOutput>)finishedTask).Result;
-                await output.SaveAsync();
-
-                DeliveryStatus.Add(output.DroneId, output);
-                System.Diagnostics.Debug.WriteLine($"Drone {output.DroneId} finish.");
                 dronesTasks.Remove(finishedTask);
             }
+        }
+
+        private async Task ManageFailedTaskAsync(Task finishedTask)
+        {
+            var concreteException = (ExceptionBase)finishedTask.Exception.InnerException;
+            var deliveryOutput = new DeliveryOutput(concreteException, fileManager);
+            DeliveryStatus.Add(deliveryOutput.DroneId, deliveryOutput);
+
+            // Save file with output information
+            await deliveryOutput.SaveAsync();
         }
 
         private string GetDroneId(string filePath)
@@ -162,19 +110,10 @@ namespace DeliveryDrone
             return fileName[2..];
         }
 
-        private async Task<List<Delivery>> CreateDeliveries(string inputFile)
+        private async Task<Delivery> CreateDeliveries(string inputFile)
         {
             var inputData = await fileManager.ReadDeliveryFileAsync(inputFile);
-            var result = new List<Delivery>();
-            var droneId = GetDroneId(inputFile);
-            foreach (var deliveryPath in inputData)
-            {
-                if (!Regex.IsMatch(deliveryPath, "^[A|I|D]+$"))
-                    throw new DeliveryPathException("Delivery path should contains A, I and D characters only.", droneId);
-
-                result.Add(new Delivery(deliveryPath, droneId));
-            }
-
+            var result = new Delivery(inputData, GetDroneId(inputFile));
             return result;
         }
     }
