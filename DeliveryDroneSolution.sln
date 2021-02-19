@@ -10,13 +10,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D008C379-88CB-42BF-915F-6DA949001415}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{1D3E01D5-EC4D-4FFE-9BA6-289C5CDC9883}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeliveryDrone.Tests", "DeliveryDrone.Test\DeliveryDrone.Tests.csproj", "{B66C1D47-370A-4D9D-8636-0C3C0AC482AA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeliveryDrone.IntegrationTests", "DeliveryDrone.IntegrationTests\DeliveryDrone.IntegrationTests.csproj", "{44BD0A7D-AF41-416F-A627-90DC2B538A69}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeliveryDrone.IntegrationTests", "DeliveryDrone.IntegrationTests\DeliveryDrone.IntegrationTests.csproj", "{44BD0A7D-AF41-416F-A627-90DC2B538A69}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
