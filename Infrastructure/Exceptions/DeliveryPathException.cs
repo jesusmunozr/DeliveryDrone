@@ -1,15 +1,10 @@
-﻿using System;
-
-namespace Infrastructure.Exceptions
+﻿namespace Infrastructure.Exceptions
 {
-    public class DeliveryPathException : Exception
+    public class DeliveryPathException : ExceptionBase
     {
-        public string DroneId { get; }
-
         public DeliveryPathException(string message, string droneId)
-            : base(message)
+            : base(message, droneId)
         {
-            DroneId = droneId;
         }
     }
 }

@@ -1,73 +1,31 @@
-﻿using System;
-using System.Collections;
+﻿using Infrastructure.Exceptions;
+using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace DeliveryDrone
 {
-    public class Delivery : IEnumerable<char>
+    public class Delivery
     {
-        private char[] steps;
+        public List<CharEnumerator> Routes { get; private set; }
         public string DroneId { get; }
 
-        public Delivery(string path, string droneId)
+        public Delivery(string[] routes, string droneId)
         {
-            steps = path.ToCharArray();
             DroneId = droneId;
+            SetRoutes(routes);
         }
 
-        public IEnumerator<char> GetEnumerator()
+        private void SetRoutes(string[] routes)
         {
-            return new DeliveryEnum(steps);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-    }
-
-    public class DeliveryEnum : IEnumerator<char>
-    {
-        private char[] steps;
-        private int position = -1;
-
-        public char Current
-        {
-            get
+            Routes = new List<CharEnumerator>();
+            foreach (var path in routes)
             {
-                try
-                {
-                    return steps[position];
-                }
-                catch (IndexOutOfRangeException)
-                {
-                    throw new InvalidOperationException();
-                }
+                if (!Regex.IsMatch(path, "^[A|I|D]+$"))
+                    throw new DeliveryPathException("Delivery path should contains A, I and D characters only.", DroneId);
+
+                Routes.Add(path.GetEnumerator());
             }
-        }
-
-        object IEnumerator.Current => Current;
-
-        public DeliveryEnum(char[] list)
-        {
-            steps = list;
-        }
-
-        public void Dispose()
-        {
-            Reset();
-            steps = null;
-        }
-
-        public bool MoveNext()
-        {
-            position++;
-            return (position < steps.Length);
-        }
-
-        public void Reset()
-        {
-            position = -1;
         }
     }
 }

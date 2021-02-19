@@ -2,11 +2,11 @@
 
 namespace Infrastructure.Exceptions
 {
-    public class DroneException : Exception
+    public abstract class ExceptionBase : Exception
     {
         public string DroneId { get; }
 
-        public DroneException(string message, string droneId)
+        public ExceptionBase(string message, string droneId)
             : base(message)
         {
             DroneId = droneId;

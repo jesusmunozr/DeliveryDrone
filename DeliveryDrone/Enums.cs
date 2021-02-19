@@ -1,5 +1,12 @@
 namespace DeliveryDrone
 {
+    public enum TransportTypes
+    {
+        LightDrone,
+        StrongDrone,
+        AutonomousVehicle
+    }
+
     public enum CardinalPoints : short
     {
         North = 1,

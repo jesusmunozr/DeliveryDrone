@@ -1,7 +1,6 @@
-﻿using DeliveryDrone;
-using Xunit;
+﻿using Xunit;
 
-namespace tests.DeliveryDrone
+namespace DeliveryDrone.Tests
 {
     public class LocationTest
     {
